@@ -42,24 +42,44 @@ function CheckFields(body,fields){
     return checkedObject;
 }
 
-//middlewareObjectDoesntExist = function
 
+//Edit a request, ONLY THE USER THAT DO THE REQUEST CAN DO IT
 
-router.put('/:requestsid', async (req, res, next) => {
+router.put('/:requestsid', (req, res, next) => {
     //try if is an invalid request with simbol strange
-    var request_id = req.params.requestsid;
-    //add try to catch if is null
-    var requests = await Requests.findById(request_id, function (err, tickets) {
-        if (err) return next(err);
+    let request_id = req.params.requestsid;
+    Requests.findById(request_id).then( result =>{
+        if (!result)
+        {
+            throw new Error('There isnt a Request with the input id. ');
+        }
+        let necesaryFields = ["message","delivered"];
+        let updater = CheckFields(req.body, necesaryFields);
+        result.update(updater).catch(err =>{
+            res.status(500).json({body:"Error Perro2"});
+        });
+        res.json({
+            statusCode:200,
+            body: "The request was correctly save"
+        });
+    }).catch(err => {
+        console.log(err);
+        res.status(500).json({body:err.message});
     });
+});
 
-    var necesaryFields = ["message","delivered"];
-    var updater = CheckFields(req.body,necesaryFields);
-    await requests.update(updater);
+
+
+// Get all requests of a certain celebrity
+
+router.get('/:celebrityid', async (req, res) => {
+    let celebrityid = req.params.celebrityid;
+    console.log(celebrityid);
     
+    var requests = await Requests.find({celebrity:celebrityid});
     res.json({
         statusCode:200,
-        body: "The request was correctly save"
+        body: requests //"All the request of all people"
     });
 });
 
