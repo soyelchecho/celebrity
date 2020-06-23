@@ -1,36 +1,24 @@
 const express = require('express');
-const router = express.Router();
+const routerRequest = express.Router();
 
 //Model of db instances
 
-const Requests = require('../models/requests')
+const Requests = require('../models/requests');
 
 //Request messages CRUD that do a person.
 
-router.get('/', async (req, res) => {
-    var requests = await Requests.find();
-    res.json({
-        statusCode:200,
-        body: requests //"All the request of all people"
-    });
+routerRequest.get('/', async (req, res) => {
+    Requests
+        .find()
+        .then(result =>{
+            res.json({
+                body: result //"All the request of all people"
+            });
+        }).catch(error =>{
+            res.status(500).json({body:error.message});
+        }); 
 });
 
-router.post('/:celebrityid', async (req, res) => {
-    var { message, delivered, buyerid } = req.body;
-    //the buyer needs to be the current user auth
-    //------- get user auth logic here ----
-
-    var celebrityid = req.params.celebrityid; 
-
-    //------ search the celebrity into the database logic ----
-    //for this step I only save the celebrityid into the field celebrity of requests model
-    var request = new Requests({buyer:buyerid,celebrity:celebrityid,delivered:delivered,message:message});
-    await request.save();
-    res.json({
-        statusCode:200,
-        body: "The request was correctly save"
-    });
-});
 
 function CheckFields(body,fields){
     var checkedObject = {};
@@ -45,43 +33,45 @@ function CheckFields(body,fields){
 
 //Edit a request, ONLY THE USER THAT DO THE REQUEST CAN DO IT
 
-router.put('/:requestsid', (req, res, next) => {
+routerRequest.put('/:requestsid', (req, res, next) => {
     //try if is an invalid request with simbol strange
     let request_id = req.params.requestsid;
-    Requests.findById(request_id).then( result =>{
-        if (!result)
-        {
-            throw new Error('There isnt a Request with the input id. ');
-        }
-        let necesaryFields = ["message","delivered"];
-        let updater = CheckFields(req.body, necesaryFields);
-        result.update(updater).catch(err =>{
-            res.status(500).json({body:"Error Perro2"});
+    Requests
+        .findById(request_id)
+        .then( result =>{
+            if (!result)
+            {
+                throw new Error('There isnt a Request with the input id. ');
+            }
+            let necesaryFields = ["message","delivered"];
+            let updater = CheckFields(req.body, necesaryFields);
+            result.update(updater).then(result =>{
+                res.json({
+                    body: "The request was correctly save"
+                });
+            }).catch(err =>{
+                res.status(500).json({body:"Error Perro2"});
+            });
+        }).catch(err => {
+            console.log(err);
+            res.status(500).json({body:err.message});
         });
-        res.json({
-            statusCode:200,
-            body: "The request was correctly save"
+});
+
+// Delete a requests
+
+routerRequest.delete('/:requestsid',(req, res) => {
+    let requestsid = req.params.requestsid;
+    Requests
+        .findByIdAndDelete(requestsid)
+        .then(result => {
+            res.json({
+                body: "The request was delet successfuly" //"All the request of all people"
+            });
+        }).catch(error =>{
+            res.status(500).json({body:"Error in delete request"});
         });
-    }).catch(err => {
-        console.log(err);
-        res.status(500).json({body:err.message});
-    });
 });
 
 
-
-// Get all requests of a certain celebrity
-
-router.get('/:celebrityid', async (req, res) => {
-    let celebrityid = req.params.celebrityid;
-    console.log(celebrityid);
-    
-    var requests = await Requests.find({celebrity:celebrityid});
-    res.json({
-        statusCode:200,
-        body: requests //"All the request of all people"
-    });
-});
-
-
-module.exports = router;
+module.exports = routerRequest;

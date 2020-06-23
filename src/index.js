@@ -19,6 +19,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api/requests',require('./routes/requests.routes'));
+app.use('/api/celebrity',require('./routes/celebrity.routes'));
+app.use('/api/buyer',require('./routes/buyer.routes'));
 
 //Error Handling Authetificaction
 
