@@ -8,8 +8,10 @@ const Requests = require('../models/requests');
 //Request messages CRUD that do a person.
 
 routerRequest.get('/', async (req, res) => {
+    let page = parseInt(req.query.page, 10) || 0;
+    let page_size = (req.query.page_size === undefined) ? 0: parseInt(req.query.page_size, 10); // Check with a model and if its in the request put 0 in this variable
     Requests
-        .find()
+        .find().skip( page > 0 ? ((page - 1) * page_size) : 0).limit(page_size).sort( '-createdOn' )
         .then(result =>{
             res.json({
                 body: result //"All the request of all people"
