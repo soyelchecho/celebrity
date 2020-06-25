@@ -16,6 +16,11 @@ app.set('port', process.env.PORT);
 // Middleware
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+  });
 
 // Routes
 app.use('/api/requests',require('./routes/requests.routes'));
